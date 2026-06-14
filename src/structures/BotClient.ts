@@ -1,10 +1,10 @@
 import { Client, GatewayIntentBits } from 'discord.js';
 import { fileURLToPath, pathToFileURL } from 'url';
-import path from 'path'
+import { dirname, join } from 'path'
 import fs from 'fs'
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __dirname = dirname(__filename);
 
 import 'dotenv/config';
 
@@ -19,11 +19,11 @@ class Bot extends Client {
 
   async start(token: string) {
     try {
-      this.handleFiles('../commands/', (file) => {
+      this.handleFiles(join(__dirname, '../commands/'), (file) => {
         this.commands.set(file.name, file)
       })
 
-      this.handleFiles('../events/', (file) => {
+      this.handleFiles(join(__dirname, '../events/'), (file) => {
         this[file.once ? 'once' : 'on'](file.name, (...args) => {
           file.execute(...args)
         })
@@ -37,13 +37,12 @@ class Bot extends Client {
   }
 
   async handleFiles(dir: string, callback: (file: any) => void) {
-    const absoluteDir = path.join(__dirname, dir);
-    const files = fs.readdirSync(absoluteDir).filter(f => {
+    const files = fs.readdirSync(dir).filter(f => {
       return f.endsWith('.ts') || f.endsWith('.js')
     });
 
     for (const file of files) {
-      const filePath = path.join(absoluteDir, file);
+      const filePath = join(dir, file);
       const fileUrl = pathToFileURL(filePath).href;
 
       try {
