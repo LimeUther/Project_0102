@@ -8,7 +8,7 @@ import { dirname, join } from 'path'
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const commands: { name: string, description: string, options: any[] }[] = [];
+const commands: any[] = [];
 
 const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
 
@@ -17,23 +17,25 @@ try {
 
   await bot.handleFiles(join(__dirname, './commands/'), (file) => {
 
-    file.options ??= []
-    file.subcommands ??= []
+    const mapped_subgroups = file.subgroups?.map((sg: any) => ({
+      ...sg,
+      type: 2,
+      options: sg.subcommands?.map((sc: any) => ({ ...sc, type: 1}))
+    }));
 
-    if (file.subcommands.length > 0) {
-      for (const { name, description, options } of file.subcommands) {
-        file.options.push({ name, description, options, type: 1 })
-      }
-    }
+    const mapped_subcommands = file.subcommands?.map((sc: any) => ({
+      ...sc,
+      type: 1,
+    }));
 
-    commands.push({
-      name: file.name,
-      description: file.description,
-      options: file.options
-    });
+    file.options = mapped_subgroups ?? mapped_subcommands ?? file.options ?? [];
+
+    delete file.subcommands
+    delete file.subgroups
+    file.options.forEach((opt: any) => delete opt.subcommands);
+
+    commands.push(file);
   })
-
-  console.log(commands)
 
   await rest.put(
     Routes.applicationCommands(process.env.CLIENT_ID),
@@ -41,6 +43,7 @@ try {
   );
 
   console.log('Successfully reloaded application (/) commands.');
+
 } catch (error) {
   console.error(error);
 }
