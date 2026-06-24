@@ -1,3 +1,6 @@
 node_modules/
+old_commands/
 dist/
 .env
+*.db
+*.db-*
