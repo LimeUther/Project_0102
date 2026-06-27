@@ -3,7 +3,7 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path'
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const __dirname = process.env.DATABASE_URL ?? dirname(__filename);
 
 export const greeterDB = new SQLite(join(__dirname, './greeter.db'));
 
